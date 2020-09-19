@@ -1,34 +1,41 @@
+# frozen_string_literal: true
+
 module Tmdb
   class TV < Resource
     has_resource 'tv', plural: 'tv'
 
     # http://docs.themoviedb.apiary.io/#tv
-    @@fields = [
-      :backdrop_path,
-      :created_by,
-      :episode_run_time,
-      :first_air_date,
-      :genres,
-      :homepage,
-      :id,
-      :in_production,
-      :languages,
-      :last_air_date,
-      :name,
-      :networks,
-      :number_of_episodes,
-      :number_of_seasons,
-      :original_name,
-      :origin_country,
-      :overview,
-      :popularity,
-      :poster_path,
-      :seasons,
-      :status,
-      :vote_average,
-      :vote_count,
-      :credits,
-      :external_ids
+    @@fields = %i[
+      backdrop_path
+      created_by
+      episode_run_time
+      first_air_date
+      genres
+      homepage
+      id
+      in_production
+      languages
+      last_air_date
+      last_episode_to_air
+      name
+      next_episode_to_air
+      networks
+      number_of_episodes
+      number_of_seasons
+      origin_country
+      origin_language
+      original_name
+      overview
+      popularity
+      poster_path
+      production_companies
+      seasons
+      status
+      type
+      vote_average
+      vote_count
+      credits
+      external_ids
     ]
 
     @@fields.each do |field|
@@ -75,6 +82,12 @@ module Tmdb
     # Get the images (posters and backdrops) for a TV series.
     def self.images(id, _conditions = {})
       search = Tmdb::Search.new("/#{endpoints[:singular]}/#{endpoint_id + id.to_s}/images")
+      search.fetch_response
+    end
+
+    # Get the videos (trailers and opening credits) for a TV Series.
+    def self.videos(id, _conditions = {})
+      search = Tmdb::Search.new("/#{endpoints[:singular]}/#{endpoint_id + id.to_s}/videos")
       search.fetch_response
     end
   end
