@@ -8,7 +8,7 @@ module Tmdb
         singular: singular.nil? ? name.downcase.to_s : singular,
         plural: opts[:plural].nil? ? "#{name.downcase}s" : opts[:plural]
       }
-      @@endpoint_id[name.downcase] = opts[:id].nil? ? '' : "#{opts[:id]}-"
+      @@endpoint_id[name.downcase] = opts[:id].nil? ? "" : "#{opts[:id]}-"
     end
 
     def self.endpoints
@@ -34,10 +34,11 @@ module Tmdb
       end
     end
 
-    def self.search(query)
+    def self.search(query, conditions = {})
       search = Tmdb::Search.new
       search.resource(endpoints[:singular].to_s)
       search.query(query)
+      search.filter(conditions)
       search.fetch.collect do |result|
         new(result)
       end
