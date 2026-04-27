@@ -61,10 +61,28 @@ module Tmdb
       search.fetch.collect { |result| new(result) }
     end
 
+    # Get the aggregate credits (cast + crew across all seasons) for a TV series.
+    def self.aggregate_credits(id, _conditions = {})
+      search = Tmdb::Search.new("/#{endpoints[:singular]}/#{endpoint_id + id.to_s}/aggregate_credits")
+      search.fetch_response
+    end
+
+    # Get the alternative titles for a specific TV series id.
+    def self.alternative_titles(id, _conditions = {})
+      search = Tmdb::Search.new("/#{endpoints[:singular]}/#{endpoint_id + id.to_s}/alternative_titles")
+      search.fetch_response
+    end
+
     # Get the cast information about a TV series.
     def self.cast(id, _conditions = {})
       search = Tmdb::Search.new("/#{endpoints[:singular]}/#{endpoint_id + id.to_s}/credits")
       search.fetch_response["cast"]
+    end
+
+    # Get the credits (cast + crew) for the latest season of a TV series id.
+    def self.credits(id, _conditions = {})
+      search = Tmdb::Search.new("/#{endpoints[:singular]}/#{endpoint_id + id.to_s}/credits")
+      search.fetch_response
     end
 
     # Get the crew information about a TV series.
@@ -82,6 +100,12 @@ module Tmdb
     # Get the images (posters and backdrops) for a TV series.
     def self.images(id, _conditions = {})
       search = Tmdb::Search.new("/#{endpoints[:singular]}/#{endpoint_id + id.to_s}/images")
+      search.fetch_response
+    end
+
+    # Get the plot keywords for a specific TV series id.
+    def self.keywords(id, _conditions = {})
+      search = Tmdb::Search.new("/#{endpoints[:singular]}/#{endpoint_id + id.to_s}/keywords")
       search.fetch_response
     end
 
