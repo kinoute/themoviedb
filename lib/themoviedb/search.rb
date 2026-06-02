@@ -1,5 +1,14 @@
 module Tmdb
   class Search
+    # The gem keeps request/response state in class variables (Api.@@config /
+    # @@response) and leans on HTTParty's shared class-level default_options,
+    # so it is not thread-safe. Concurrent callers (e.g. parallel Sidekiq
+    # workers) corrupt each other's in-flight requests — observed in
+    # production as a JSONP `callback({...})` wrapper leaking into an unrelated
+    # /images response and raising JSON::ParserError. Serialize every HTTP
+    # round-trip so only one call is in flight at a time.
+    HTTP_MUTEX = Mutex.new
+
     def initialize(resource = nil)
       @params = {}
       @resource = resource.nil? ? "/search/movie" : resource
@@ -64,18 +73,20 @@ module Tmdb
 
     # Send back whole response
     def fetch_response(conditions = {})
-      if conditions[:external_source]
-        options = @params.merge(Api.config.merge({ external_source: conditions[:external_source] }))
-      else
-        options = @params.merge(Api.config)
+      HTTP_MUTEX.synchronize do
+        if conditions[:external_source]
+          options = @params.merge(Api.config.merge({ external_source: conditions[:external_source] }))
+        else
+          options = @params.merge(Api.config)
+        end
+        response = Api.get(@resource, query: options)
+
+        original_etag = response.headers.fetch("etag", "")
+        etag = original_etag.delete('"')
+
+        Api.set_response("code" => response.code, "etag" => etag)
+        response.to_hash
       end
-      response = Api.get(@resource, query: options)
-
-      original_etag = response.headers.fetch("etag", "")
-      etag = original_etag.delete('"')
-
-      Api.set_response("code" => response.code, "etag" => etag)
-      response.to_hash
     end
   end
 end
